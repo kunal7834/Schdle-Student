@@ -234,12 +234,18 @@ const StudentPlatform = () => {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      if (!API_URL) {
+        if (!cancelled) setLoadError('REACT_APP_API_URL is not set. Configure it in your deployment environment variables.');
+        if (!cancelled) setLoading(false);
+        return;
+      }
       try {
         const [eventsRes, rostersRes] = await Promise.all([
           fetch(`${API_URL}/api/events`),
           fetch(`${API_URL}/api/rosters`),
         ]);
-        if (!eventsRes.ok || !rostersRes.ok) throw new Error('Failed to load data from server.');
+        if (!eventsRes.ok) throw new Error(`GET ${API_URL}/api/events failed (${eventsRes.status}).`);
+        if (!rostersRes.ok) throw new Error(`GET ${API_URL}/api/rosters failed (${rostersRes.status}).`);
         const eventsData = await eventsRes.json();
         const rostersData = await rostersRes.json();
         if (!cancelled) {
@@ -247,7 +253,7 @@ const StudentPlatform = () => {
           setRosters({ ...emptyRosters(), ...rostersData });
         }
       } catch (err) {
-        if (!cancelled) setLoadError(err.message || 'Failed to load data from server.');
+        if (!cancelled) setLoadError(`Failed to load data from ${API_URL}. ${err.message || ''} This is usually caused by the API being unreachable or CORS not allowing this site's origin.`);
       } finally {
         if (!cancelled) setLoading(false);
       }
