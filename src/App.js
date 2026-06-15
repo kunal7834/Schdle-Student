@@ -15,6 +15,14 @@ const firstNamePassword = (fullName) => {
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 };
 
+// Event color coding by which admin office scheduled it
+const EVENT_STYLES = {
+  'placement@iimk.ac.in': { border: 'border-violet-500', bg: 'bg-violet-50', text: 'text-violet-600', badgeBorder: 'border-violet-200', dot: 'bg-violet-500' },
+  'programme@iimk.ac.in': { border: 'border-sky-500', bg: 'bg-sky-50', text: 'text-sky-600', badgeBorder: 'border-sky-200', dot: 'bg-sky-500' },
+};
+const DEFAULT_EVENT_STYLE = { border: 'border-sky-500', bg: 'bg-sky-50', text: 'text-sky-600', badgeBorder: 'border-sky-200', dot: 'bg-sky-500' };
+const getEventStyle = (event) => EVENT_STYLES[String(event?.createdBy || '').trim().toLowerCase()] || DEFAULT_EVENT_STYLE;
+
 // ---------------- IIMK Header Banner ----------------
 const IIMKHeader = () => (
   <div className="w-full bg-white border-b border-slate-200 shadow-sm">
@@ -55,7 +63,8 @@ const CalendarView = ({ currentMonth, setCurrentMonth, selectedDate, setSelected
   const renderDayCell = (dateStr, dayLabel, key) => {
     const isSelected = dateStr === selectedDate;
     const isToday = dateStr === todayStr;
-    const count = getEventsForDate(dateStr).length;
+    const dayEvents = getEventsForDate(dateStr);
+    const count = dayEvents.length;
     return (
       <button
         key={key}
@@ -70,8 +79,8 @@ const CalendarView = ({ currentMonth, setCurrentMonth, selectedDate, setSelected
         <div className="text-xs sm:text-sm">{dayLabel}</div>
         {count > 0 && (
           <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
-            {[...Array(Math.min(count, 3))].map((_, i) => (
-              <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-500'}`} />
+            {dayEvents.slice(0, 3).map((event, i) => (
+              <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : getEventStyle(event).dot}`} />
             ))}
           </div>
         )}
@@ -391,12 +400,14 @@ const StudentPlatform = () => {
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {selectedDateEvents.length === 0 ? (
                   <p data-testid="student-no-events" className="text-slate-500 text-center py-4 text-sm">No classes for this date</p>
-                ) : selectedDateEvents.map(event => (
-                  <div key={event.id} data-testid={`student-event-${event.id}`} className="border-l-4 border-sky-500 bg-sky-50 rounded-lg p-3">
+                ) : selectedDateEvents.map(event => {
+                  const style = getEventStyle(event);
+                  return (
+                  <div key={event.id} data-testid={`student-event-${event.id}`} className={`border-l-4 ${style.border} ${style.bg} rounded-lg p-3`}>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sky-600 font-semibold text-sm">{event.time}</span>
+                      <span className={`${style.text} font-semibold text-sm`}>{event.time}</span>
                       {event.venue && (
-                        <span className="inline-flex items-center gap-1 text-xs bg-white text-sky-600 px-2 py-0.5 rounded border border-sky-200">
+                        <span className={`inline-flex items-center gap-1 text-xs bg-white ${style.text} px-2 py-0.5 rounded border ${style.badgeBorder}`}>
                           <MapPin className="w-3 h-3" /> {event.venue}
                         </span>
                       )}
@@ -404,7 +415,8 @@ const StudentPlatform = () => {
                     <h4 className="font-semibold text-slate-900">{event.title}</h4>
                     {event.description && <p className="text-slate-600 text-sm mt-1">{event.description}</p>}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -451,12 +463,14 @@ const StudentPlatform = () => {
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {selectedDateEvents.length === 0 ? (
                     <p data-testid="student-no-events" className="text-slate-500 text-center py-4 text-sm">No classes for this date</p>
-                  ) : selectedDateEvents.map(event => (
-                    <div key={event.id} data-testid={`student-event-${event.id}`} className="border-l-4 border-sky-500 bg-sky-50 rounded-lg p-3">
+                  ) : selectedDateEvents.map(event => {
+                    const style = getEventStyle(event);
+                    return (
+                    <div key={event.id} data-testid={`student-event-${event.id}`} className={`border-l-4 ${style.border} ${style.bg} rounded-lg p-3`}>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sky-600 font-semibold text-sm">{event.time}</span>
+                        <span className={`${style.text} font-semibold text-sm`}>{event.time}</span>
                         {event.venue && (
-                          <span className="inline-flex items-center gap-1 text-xs bg-white text-sky-600 px-2 py-0.5 rounded border border-sky-200">
+                          <span className={`inline-flex items-center gap-1 text-xs bg-white ${style.text} px-2 py-0.5 rounded border ${style.badgeBorder}`}>
                             <MapPin className="w-3 h-3" /> {event.venue}
                           </span>
                         )}
@@ -464,7 +478,8 @@ const StudentPlatform = () => {
                       <h4 className="font-semibold text-slate-900">{event.title}</h4>
                       {event.description && <p className="text-slate-600 text-sm mt-1">{event.description}</p>}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
